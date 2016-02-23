@@ -2,6 +2,7 @@ package statsd
 
 import (
 	"bytes"
+	"fmt"
 	"math/rand"
 	"net"
 	"strconv"
@@ -235,7 +236,7 @@ func (c *Client) Increment(bucket string) {
 }
 
 // Gauge records an absolute value for the given bucket.
-func (c *Client) Gauge(bucket string, value int) {
+func (c *Client) Gauge(bucket string, value float64) {
 	if c.muted {
 		return
 	}
@@ -246,7 +247,7 @@ func (c *Client) Gauge(bucket string, value int) {
 	// https://github.com/etsy/statsd/blob/master/docs/metric_types.md#gauges
 	if value < 0 {
 		c.appendBucket(bucket)
-		c.gauge(0)
+		c.gauge(0.0)
 	}
 	c.appendBucket(bucket)
 	c.gauge(value)
@@ -255,11 +256,11 @@ func (c *Client) Gauge(bucket string, value int) {
 }
 
 // ChangeGauge changes the value of a gauge by the given delta.
-func (c *Client) ChangeGauge(bucket string, delta int) {
+func (c *Client) ChangeGauge(bucket string, delta float64) {
 	if c.muted {
 		return
 	}
-	if delta == 0 {
+	if delta == 0.0 {
 		return
 	}
 
@@ -274,8 +275,8 @@ func (c *Client) ChangeGauge(bucket string, delta int) {
 	c.mu.Unlock()
 }
 
-func (c *Client) gauge(value int) {
-	c.appendInt(value)
+func (c *Client) gauge(value float64) {
+	c.appendFloat(value)
 	c.appendType("g")
 	c.closeMetric()
 }
@@ -372,6 +373,10 @@ func (c *Client) appendString(s string) {
 
 func (c *Client) appendInt(i int) {
 	c.buf = strconv.AppendInt(c.buf, int64(i), 10)
+}
+
+func (c *Client) appendFloat(i float64) {
+	c.buf = []byte(fmt.Sprintf("%v", i))
 }
 
 func (c *Client) appendBucket(bucket string) {
