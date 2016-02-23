@@ -2,7 +2,6 @@ package statsd
 
 import (
 	"bytes"
-	"fmt"
 	"math/rand"
 	"net"
 	"strconv"
@@ -376,7 +375,7 @@ func (c *Client) appendInt(i int) {
 }
 
 func (c *Client) appendFloat(i float64) {
-	c.buf = []byte(fmt.Sprintf("%v", i))
+	c.buf = strconv.AppendFloat(c.buf, i, 'f', -1, 64)
 }
 
 func (c *Client) appendBucket(bucket string) {
